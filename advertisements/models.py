@@ -120,7 +120,7 @@ class Advertisement(models.Model):
 
     AVAILABILITY_IN_KYRGYZSTAN_CHOICES = {
         ('yes', 'в наличии'),
-        ('with prder', 'на заказ'),
+        ('with order', 'на заказ'),
         ('in road', 'в пути'),
     }
 
@@ -164,6 +164,11 @@ class Advertisement(models.Model):
         ('authenticated', 'зарегистрированные пользователи')
     }
 
+    UNITS_OF_MILEAGE_CHOICES = {
+        ('km', 'км'),
+        ('mile', 'миль')
+    }
+
     owner = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -192,7 +197,7 @@ class Advertisement(models.Model):
     )
     state = models.CharField(_('Состояние'), choices=STATE_CHOICES)
     mileage = models.IntegerField(_('Пробег'))
-    units_of_mileage = models.CharField(_("Еденицы измерения пробега"))
+    units_of_mileage = models.CharField(_("Еденицы измерения пробега"), choices=UNITS_OF_MILEAGE_CHOICES)
     availability_in_kyrgyzstan = models.CharField(_('Наличие в Кыргызстане'), choices=AVAILABILITY_IN_KYRGYZSTAN_CHOICES)
     customs_in_kyrgyzstan = models.BooleanField(_('Растаможен в Кыргызстане'), null=True, blank=True)
     urgently = models.BooleanField(_("Срочно"), null=True, blank=True)
