@@ -193,13 +193,41 @@ EMAIL_USE_SSL = config("EMAIL_USE_SSL", cast=bool)
 
 AUTH_USER_MODEL = 'accounts.User'
 
-CORS_ORIGIN_ALLOW_ALL = True
-CORS_ALLOW_CREDENTIALS = True
-CORS_ORIGIN_WHITELIST = [
+# CORS_ORIGIN_ALLOW_ALL = True
+# CORS_ALLOW_CREDENTIALS = True
+# CORS_ORIGIN_WHITELIST = [
+#     'http://localhost:8000',
+#     'http://0:0:0:0:8000',
+#     'http://172.18.0.1:8001',
+# ]
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "https://localhost:3000",
+    'http://34.70.155.154:80/'
+    'http://34.70.155.154:8000/'
     'http://localhost:8000',
     'http://0:0:0:0:8000',
     'http://172.18.0.1:8001',
 ]
+
+CORS_ALLOW_METHODS = ['GET', 'OPTIONS', 'POST', 'PATCH', 'PUT', 'DELETE']
+
+CORS_ALLOW_HEADERS = [
+    'Accept',
+    'Accept-Encoding',
+    'Authorization',
+    'Content-Type',
+    'DNT',
+    'Origin',
+    'User-Agent',
+    'X-CSRFToken',
+    'X-Requested-With',
+]
+
+CORS_ALLOW_CREDENTIALS = True
+
+CORS_ORIGIN_ALLOW_ALL = False
 
 
 
