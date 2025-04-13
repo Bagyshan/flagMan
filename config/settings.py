@@ -204,8 +204,8 @@ AUTH_USER_MODEL = 'accounts.User'
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "https://localhost:3000",
-    'http://34.70.155.154:80/',
-    'http://34.70.155.154:8000/',
+    'http://34.70.155.154:80',
+    'http://34.70.155.154:8000',
     'http://localhost:8000',
     'http://0:0:0:0:8000',
     'http://172.18.0.1:8001',
