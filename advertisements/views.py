@@ -10,52 +10,6 @@ from drf_spectacular.utils import extend_schema, OpenApiExample, OpenApiTypes, O
 from rest_framework.parsers import MultiPartParser
 
 
-# @extend_schema(
-#     request=AdvertisementCreateSerializer,
-#     responses={status.HTTP_201_CREATED: AdvertisementCreateSerializer},
-#     examples=[
-#         OpenApiExample(
-#             name="Создание объявления с JSON и файлами",
-#             value={
-#                 "mark": "BMW",
-#                 "model": "BMW_M3",
-#                 "year_of_manufacture": 2024,
-#                 "generation": 23978803,
-#                 "notice": "седан",
-#                 "engine_type": "бензин",
-#                 "drive": "полный",
-#                 "transmission": "автоматическая",
-#                 "modification": "Competition",
-#                 "steering_wheel": "Левый",
-#                 "color": "#000000",
-#                 "state": "new",
-#                 "mileage": 10000,
-#                 "units_of_mileage": "км",
-#                 "availability_in_kyrgyzstan": "yes",
-#                 "customs_in_kyrgyzstan": True,
-#                 "urgently": False,
-#                 "country_of_registration": "kyrgyzstan",
-#                 "possibility_of_exchange": "key to key",
-#                 "possibility_of_installments": True,
-#                 "currency": "USD",
-#                 "price": 50000,
-#                 "region": "chui",
-#                 "city": "bishkek",
-#                 "permission_to_comment": "authenticated",
-#                 "description": "Отличное состояние",
-#                 "phone_number": "+996700123456",
-#                 "complectation": '{"leather": true, "xenon": true, "USB": true}',
-#                 "other": '{"recently_imported": true, "tax_paid": true}',
-#                 "images": ["/home/bagyshan/Pictures/Screenshots/Screenshot from 2024-09-05 14-10-25.png",
-#                            "/home/bagyshan/Pictures/Screenshots/Screenshot from 2024-09-06 01-29-35.png" 
-#                 ],
-#                 "owner": 2
-#             },
-#             request_only=True,
-#             media_type="multipart/form-data",
-#         )
-#     ]
-# )
 @extend_schema(
     request={
         'multipart/form-data': {

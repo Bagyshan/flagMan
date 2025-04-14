@@ -1,0 +1,97 @@
+version: '3.10'
+
+services:
+  backend:
+    build: ./
+    command: >
+      sh -c "gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 2"
+    volumes:
+      - ./:/usr/src/app/
+      - static_volume:/usr/src/app/static
+      - media_volume:/usr/src/app/media
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - migration
+    networks:
+      - backend
+
+  db:
+    image: postgres:16
+    restart: always
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    ports:
+      - "5432:5432"
+    networks:
+      - backend
+    
+  migration:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    restart: on-failure
+    command: >
+      sh -c "python manage.py makemigrations && python manage.py migrate"
+    volumes:
+      - ./:/usr/src/app/
+    depends_on:
+      - db
+    networks:
+      - backend
+
+  celery:
+    build: ./
+    command: celery -A config worker -l info
+    volumes: 
+      - ./:/usr/src/app/
+    depends_on:
+      - backend
+      - redis
+    networks:
+      - backend
+
+
+  redis:
+    image: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - backend
+
+
+
+  nginx:
+    build:
+      context: .
+      dockerfile: nginx/Dockerfile.prod
+    container_name: "nginx"
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx-local.conf:/etc/nginx/conf.d/nginx-local.conf
+      - /etc/letsencrypt:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+      - static_volume:/usr/src/app/static
+      - media_volume:/usr/src/app/media
+    depends_on:
+      - backend
+    networks:
+      - backend
+
+
+
+volumes:
+  postgres_data:
+  static_volume:
+  media_volume:
+
+networks:
+  backend:

@@ -205,10 +205,20 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "https://localhost:3000",
     'http://34.70.155.154:80',
+    'https://34.70.155.154:80',
+    'http://34.70.155.154:443',
+    'https://34.70.155.154:443',
     'http://34.70.155.154:8000',
     'http://localhost:8000',
     'http://0:0:0:0:8000',
     'http://172.18.0.1:8001',
+    'https://localhost:8000',
+    'https://0:0:0:0:8000',
+    'https://172.18.0.1:8001',
+    'http://flagman-backend.com.kg',
+    'https://flagman-backend.com.kg',
+    'http://www.flagman-backend.com.kg',
+    'http://www.flagman-backend.com.kg'
 ]
 
 CORS_ALLOW_METHODS = ['GET', 'OPTIONS', 'POST', 'PATCH', 'PUT', 'DELETE']
