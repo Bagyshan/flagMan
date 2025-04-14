@@ -76,7 +76,7 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./nginx/nginx-local.conf:/etc/nginx/conf.d/nginx-local.conf
+      - ./nginx/nginx-prod.conf:/etc/nginx/conf.d/nginx-prod.conf
       - /etc/letsencrypt:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
       - static_volume:/usr/src/app/static
