@@ -227,6 +227,8 @@ CORS_ALLOWED_ORIGINS = [
     'https://0:0:0:0:8081',
     'https://172.18.0.1:8081',
     'https://172.17.0.1:8081',
+    'http://10.0.2.2:8081',
+    'https://10.0.2.2:8081',
 ]
 
 CORS_ALLOW_METHODS = ['GET', 'OPTIONS', 'POST', 'PATCH', 'PUT', 'DELETE']
