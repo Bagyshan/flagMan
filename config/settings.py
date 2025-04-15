@@ -188,6 +188,10 @@ EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
 EMAIL_USE_SSL = config("EMAIL_USE_SSL", cast=bool)
 
+CSRF_TRUSTED_ORIGINS = [
+    "https://flagman-backend.com.kg",
+    "https://www.flagman-backend.com.kg"
+]
 
 
 
@@ -218,7 +222,7 @@ CORS_ALLOWED_ORIGINS = [
     'http://flagman-backend.com.kg',
     'https://flagman-backend.com.kg',
     'http://www.flagman-backend.com.kg',
-    'http://www.flagman-backend.com.kg',
+    'https://www.flagman-backend.com.kg',
     'http://localhost:8081',
     'http://0:0:0:0:8081',
     'http://172.18.0.1:8081',
@@ -229,6 +233,8 @@ CORS_ALLOWED_ORIGINS = [
     'https://172.17.0.1:8081',
     'http://10.0.2.2:8081',
     'https://10.0.2.2:8081',
+    'http://34.70.155.154',
+    'https://34.70.155.154',
 ]
 
 CORS_ALLOW_METHODS = ['GET', 'OPTIONS', 'POST', 'PATCH', 'PUT', 'DELETE']
