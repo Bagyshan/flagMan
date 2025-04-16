@@ -8,6 +8,9 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from .models import Advertisement, Complectation, OtherBenefits
 from drf_spectacular.utils import extend_schema, OpenApiExample, OpenApiTypes, OpenApiParameter
 from rest_framework.parsers import MultiPartParser
+from django_filters.rest_framework import DjangoFilterBackend
+from .filters import AdvertisementFilter
+from rest_framework.filters import OrderingFilter
 
 
 @extend_schema(
@@ -148,7 +151,7 @@ from rest_framework.parsers import MultiPartParser
             request_only=True
         )
     ],
-    tags=['Advertisement create']
+    tags=['advertisement create']
 )
 class AdvertisementCreateView(APIView):
     queryset = Advertisement.objects.all()
@@ -167,6 +170,12 @@ class AdvertisementCreateView(APIView):
 class AdvertisementGetViewSet(ReadOnlyModelViewSet):
     queryset = Advertisement.objects.all().select_related('complectation', 'other').prefetch_related('images')
     permission_classes = [AllowAny]
+
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    filterset_class = AdvertisementFilter  
+
+    ordering_fields = ['price', 'created_at', 'year_of_manufacture', 'mileage']
+    ordering = ['-created_at']
 
     def get_serializer_class(self):
         if self.action == 'retrieve':
