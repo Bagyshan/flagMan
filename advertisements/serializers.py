@@ -41,6 +41,7 @@ class AdvertisementCreateSerializer(serializers.ModelSerializer):
         complectation_data = validated_data.pop('complectation', None)
         other_data = validated_data.pop('other', None)
         images_data = validated_data.pop('images', None) or self.context['request'].FILES.getlist('images')
+        validated_data.pop("is_active", None)
 
         complectation = Complectation.objects.create(**complectation_data) if complectation_data else None
         other = OtherBenefits.objects.create(**other_data) if other_data else None
