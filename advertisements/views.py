@@ -1,6 +1,8 @@
 from rest_framework.views import APIView
 from rest_framework import generics
+from rest_framework import viewsets, permissions, mixins
 from rest_framework.viewsets import ReadOnlyModelViewSet
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework import status
 from .serializers import AdvertisementCreateSerializer, AdvertisementShortListSerializer, AdvertisementFullRetrieveSerializer
@@ -30,11 +32,11 @@ from rest_framework.filters import OrderingFilter
                 'steering_wheel': {'type': 'string', 'example': 'Левый'},
                 'color': {
                     'type': 'string',
-                    'enum': ['#000000', '#C0C0C0', '#FFFFFF', '#808080', '#F5F5DC', '#30D5C8',
-                             '#800000', '#CD7F32', '#DE3163', '#87CEEB', '#FFFF00', '#008000',
-                             '#FFD700', '#A52A2A', '#FF0000', '#FFA500', '#FFC0CB', '#0000FF',
-                             '#C8A2C8', '#800080', '#7FFFD4', '#580F41'],
-                    'example': '#000000'
+                    'enum': ['black', 'silver', 'white', 'grey', 'beige', 'turquoise',
+                             'burgundy', 'bronze', 'cherry', 'white blue', 'yellow', 'green',
+                             'gold', 'brown', 'red', 'orange', 'pink', 'blue',
+                             'lilac', 'violet', 'chameleon', 'eggplant'],
+                    'example': 'black'
                 },
                 'state': {
                     'type': 'string',
@@ -105,13 +107,13 @@ from rest_framework.filters import OrderingFilter
                         'format': 'binary'
                     }
                 },
-                'owner': {'type': 'integer', 'example': 2}
+                # 'owner': {'type': 'integer', 'example': 2}
             },
             'required': [
                 'mark', 'model', 'year_of_manufacture', 'notice', 'engine_type',
                 'drive', 'transmission', 'steering_wheel', 'color', 'state', 'mileage',
                 'units_of_mileage', 'availability_in_kyrgyzstan', 'country_of_registration',
-                'currency', 'price', 'region', 'city', 'phone_number', 'owner'
+                'currency', 'price', 'region', 'city', 'phone_number'
             ]
         }
     },
@@ -181,6 +183,35 @@ class AdvertisementGetViewSet(ReadOnlyModelViewSet):
         if self.action == 'retrieve':
             return AdvertisementFullRetrieveSerializer
         return AdvertisementShortListSerializer
+    
+
+@extend_schema(
+    tags=["advertisements edit"]
+)
+class AdvertisementUpdateDeleteViewSet(
+    mixins.UpdateModelMixin,    # для PUT/PATCH
+    mixins.DestroyModelMixin,   # для DELETE
+    viewsets.GenericViewSet
+):
+    queryset = Advertisement.objects.all()
+    serializer_class = AdvertisementCreateSerializer  # Используется для create, update
+    permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser]
+
+    def get_queryset(self):
+        # Возвращаем только объявления текущего пользователя
+        return Advertisement.objects.filter(owner=self.request.user)
+
+    def perform_update(self, serializer):
+        # Проверка, что пользователь владелец
+        if self.get_object().owner != self.request.user:
+            raise PermissionDenied("Вы не являетесь владельцем этого объявления.")
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        if instance.owner != self.request.user:
+            raise PermissionDenied("Вы не можете удалить это объявление.")
+        instance.delete()
     
 
 class AdvertisementMetaInfoView(APIView):

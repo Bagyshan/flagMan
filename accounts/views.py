@@ -7,11 +7,15 @@ from rest_framework.permissions import AllowAny
 from random import randint
 from django.utils import timezone
 from .tasks import send_verificaation_code
+from django.utils.timezone import now
+from rest_framework.permissions import IsAuthenticated
 from .serializers import (
     RegistrationSerializer,
     VerifyEmailSerializer,
     SetPasswordSerializer,
-    UserLoginSerializer
+    UserLoginSerializer,
+    UserProfileSerializer,
+    ChangePasswordSerializer
 )
 
 User = get_user_model()
@@ -150,8 +154,11 @@ class UserLoginView(generics.GenericAPIView):
         user = authenticate(request, username=email, password=password)
         if user:  
             if not user.is_verified_email:
-                return Response({"error": "Пожалуйста, подтвердите свой номер телефона, введя код подтверждения"}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"error": "Пожалуйста, подтвердите свою почту, введя код подтверждения"}, status=status.HTTP_400_BAD_REQUEST)
             
+            user.last_login = now()
+            user.save(update_fields=['last_login'])
+
             refresh = RefreshToken.for_user(user)
             return Response({
                 'id': user.id,
@@ -161,3 +168,38 @@ class UserLoginView(generics.GenericAPIView):
             }, status=status.HTTP_200_OK)
         else:
             return Response({"error": "Неверный номер телефона или пароль"}, status=status.HTTP_401_UNAUTHORIZED)
+        
+
+
+class UserProfileView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserProfileSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user
+
+    def delete(self, request, *args, **kwargs):
+        user = self.get_object()
+        user.is_delete = True
+        user.save()
+        return Response({"detail": "Профиль удалён"}, status=status.HTTP_204_NO_CONTENT)
+    
+
+
+class ChangePasswordView(generics.UpdateAPIView):
+    serializer_class = ChangePasswordSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user
+
+    def update(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+
+        user = self.get_object()
+        user.set_password(serializer.validated_data['new_password'])
+        user.save()
+
+        return Response({"detail": "Пароль успешно изменён"}, status=status.HTTP_200_OK)

@@ -2,6 +2,9 @@ import json
 from rest_framework import serializers
 from drf_spectacular.utils import extend_schema_serializer, OpenApiExample
 from .models import Advertisement, AdvertisementImage, Complectation, OtherBenefits
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 class ComplectationSerializer(serializers.ModelSerializer):
     class Meta:
@@ -30,9 +33,11 @@ class AdvertisementCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Advertisement
         fields = '__all__'
+        read_only_fields = ['owner']
 
 
     def create(self, validated_data):
+        request = self.context.get('request')
         complectation_data = validated_data.pop('complectation', None)
         other_data = validated_data.pop('other', None)
         images_data = validated_data.pop('images', None) or self.context['request'].FILES.getlist('images')
@@ -43,7 +48,9 @@ class AdvertisementCreateSerializer(serializers.ModelSerializer):
         advertisement = Advertisement.objects.create(
             **validated_data,
             complectation=complectation,
-            other=other
+            other=other,
+            owner=request.user,
+            is_active=True 
         )
 
         for image in images_data:
@@ -80,11 +87,16 @@ class AdvertisementShortListSerializer(serializers.ModelSerializer):
         ]
 
 
+class OwnerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'name', 'last_login']
 
 class AdvertisementFullRetrieveSerializer(serializers.ModelSerializer):
     complectation = ComplectationSerializer()
     other = OtherBenefitsSerializer()
     images = AdvertisementImageSerializer(many=True, read_only=True)
+    owner = OwnerSerializer(read_only=True)
 
     class Meta:
         model = Advertisement

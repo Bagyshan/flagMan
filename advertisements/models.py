@@ -87,28 +87,28 @@ class OtherBenefits(models.Model):
 
 class Advertisement(models.Model):
     COLOR_CHOICES = [
-        ('#000000', 'черный'),
-        ('#C0C0C0', 'серебристый'),
-        ('#FFFFFF', 'белый'),
-        ('#808080', 'серый'),
-        ('#F5F5DC', 'бежевый'),
-        ('#30D5C8', 'бирюзовый'),
-        ('#800000', 'бордовый'),
-        ('#CD7F32', 'бронза'),
-        ('#DE3163', 'вишня'),
-        ('#87CEEB', 'голубой'),
-        ('#FFFF00', 'жёлтый'),
-        ('#008000', 'зеленый'),
-        ('#FFD700', 'золотистый'),
-        ('#A52A2A', 'коричневый'),
-        ('#FF0000', 'красный'),
-        ('#FFA500', 'оранжевый'),
-        ('#FFC0CB', 'розовый'),
-        ('#0000FF', 'синий'),
-        ('#C8A2C8', 'сиреневый'),
-        ('#800080', 'фиолетовый'),
-        ('#7FFFD4', 'хамелеон'), 
-        ('#580F41', 'баклажан'),
+        ('black', 'черный'),
+        ('silver', 'серебристый'),
+        ('white', 'белый'),
+        ('grey', 'серый'),
+        ('beige', 'бежевый'),
+        ('turquoise', 'бирюзовый'),
+        ('burgundy', 'бордовый'),
+        ('bronze', 'бронза'),
+        ('cherry', 'вишня'),
+        ('white blue', 'голубой'),
+        ('yellow', 'жёлтый'),
+        ('green', 'зеленый'),
+        ('gold', 'золотистый'),
+        ('brown', 'коричневый'),
+        ('red', 'красный'),
+        ('orange', 'оранжевый'),
+        ('pink', 'розовый'),
+        ('blue', 'синий'),
+        ('lilac', 'сиреневый'),
+        ('violet', 'фиолетовый'),
+        ('chameleon', 'хамелеон'), 
+        ('eggplant', 'баклажан'),
     ]
 
     STATE_CHOICES = {
@@ -222,6 +222,7 @@ class Advertisement(models.Model):
 
     phone_number = models.CharField(_("Номер телефона"), validators=[validate_kg_phone])
 
+    is_active = models.BooleanField(_("Статус активности"), default=True)
     created_at = models.DateTimeField(_("Время создания"), auto_now_add=True)
     updated_at = models.DateTimeField(_("Время обновления"), auto_now=True)
 

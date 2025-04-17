@@ -18,6 +18,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         unique=True,
         db_index=True)
         # validators=[validate_kg_phone])
+    avatar = models.ImageField(_("Аватарка"), upload_to="avatar/", default=None, null=True, blank=True)
     is_company = models.BooleanField(_('Юр. Лицо'), default=False)
     is_superuser = models.BooleanField(_('Суперпользователь'), default=False)
     is_delete = models.BooleanField(_('Удален'), default=False)
