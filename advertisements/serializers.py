@@ -3,6 +3,8 @@ from rest_framework import serializers
 from drf_spectacular.utils import extend_schema_serializer, OpenApiExample
 from .models import Advertisement, AdvertisementImage, Complectation, OtherBenefits
 from django.contrib.auth import get_user_model
+from config.settings import CARS_BASE_TOKEN
+import requests
 
 User = get_user_model()
 
@@ -91,7 +93,7 @@ class AdvertisementShortListSerializer(serializers.ModelSerializer):
 class OwnerSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'name', 'last_login']
+        fields = ['id', 'name', 'last_login', 'avatar', 'is_company']
 
 class AdvertisementFullRetrieveSerializer(serializers.ModelSerializer):
     complectation = ComplectationSerializer()
@@ -102,3 +104,29 @@ class AdvertisementFullRetrieveSerializer(serializers.ModelSerializer):
     class Meta:
         model = Advertisement
         fields = '__all__'
+    
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+
+        # Получаем значения mark и model
+        mark = instance.mark
+        model = instance.model
+        generation_id = instance.generation
+
+        try:
+            url = f"https://cars-base.ru/api/cars/{mark}/{model}?key={CARS_BASE_TOKEN}"
+            response = requests.get(url)
+
+            if response.status_code == 200:
+                generations = response.json()
+                generation_info = next(
+                    (gen for gen in generations if str(gen.get('id')) == str(generation_id)), None
+                )
+
+                if generation_info:
+                    data['generation'] = generation_info
+        except Exception as e:
+            # Логируем или просто игнорируем ошибки
+            print(f"Ошибка при получении поколения: {e}")
+
+        return data

@@ -1,13 +1,15 @@
 from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth import get_user_model, authenticate
-from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework import generics
+from rest_framework_simplejwt.tokens import RefreshToken, TokenError
+from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
+from rest_framework import generics, views
 from rest_framework.permissions import AllowAny
 from random import randint
 from django.utils import timezone
 from .tasks import send_verificaation_code
 from django.utils.timezone import now
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from .serializers import (
     RegistrationSerializer,
@@ -15,7 +17,9 @@ from .serializers import (
     SetPasswordSerializer,
     UserLoginSerializer,
     UserProfileSerializer,
-    ChangePasswordSerializer
+    ChangePasswordSerializer,
+    ForgotPasswordSerializer,
+    PasswordResetConfirmSerializer
 )
 
 User = get_user_model()
@@ -178,12 +182,24 @@ class UserProfileView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_object(self):
         return self.request.user
-
+    
     def delete(self, request, *args, **kwargs):
         user = self.get_object()
-        user.is_delete = True
-        user.save()
-        return Response({"detail": "Профиль удалён"}, status=status.HTTP_204_NO_CONTENT)
+
+        # Попробуем взять refresh токен (если есть)
+        refresh_token = request.data.get("refresh")
+
+        if refresh_token:
+            try:
+                token = RefreshToken(refresh_token)
+                token.blacklist()
+            except TokenError as e:
+                return Response({"detail": f"Ошибка с токеном: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Удаляем пользователя (hard delete)
+        user.delete()
+
+        return Response({"detail": "Профиль удалён. Токены отозваны, если были переданы."}, status=status.HTTP_204_NO_CONTENT)
     
 
 
@@ -203,3 +219,43 @@ class ChangePasswordView(generics.UpdateAPIView):
         user.save()
 
         return Response({"detail": "Пароль успешно изменён"}, status=status.HTTP_200_OK)
+    
+
+
+class LogoutView(views.APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        try:
+            refresh_token = request.data["refresh"]
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+
+            return Response({"detail": "Вы успешно вышли из системы."}, status=status.HTTP_205_RESET_CONTENT)
+
+        except KeyError:
+            return Response({"detail": "Refresh токен обязателен."}, status=status.HTTP_400_BAD_REQUEST)
+
+        except TokenError as e:
+            return Response({"detail": f"Недопустимый токен: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
+        
+
+
+class ForgotPasswordView(views.APIView):
+    serializer_class = ForgotPasswordSerializer
+
+    def post(self, request):
+        serializer = ForgotPasswordSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response({"detail": "Код отправлен на вашу почту."}, status=status.HTTP_200_OK)
+
+
+class PasswordResetConfirmView(views.APIView):
+    serializer_class = PasswordResetConfirmSerializer
+
+    def post(self, request):
+        serializer = PasswordResetConfirmSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response({"detail": "Пароль успешно изменён."}, status=status.HTTP_200_OK)

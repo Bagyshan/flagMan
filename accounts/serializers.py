@@ -1,6 +1,11 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from advertisements.serializers import AdvertisementShortListSerializer
+from django.core.exceptions import ValidationError
+import random
+from accounts.tasks import send_verificaation_code, send_password_reset_code
+from django.utils import timezone
+from datetime import timedelta
 
 User = get_user_model()
 
@@ -59,6 +64,49 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'active_advertisements', 'inactive_advertisements'
         ]
 
+    def update(self, instance, validated_data):
+        request = self.context.get('request')
+        new_email = validated_data.get('email')
+        old_email = instance.email
+
+        if new_email and new_email != old_email:
+            # Генерация 4-значного кода
+            code = str(random.randint(1000, 9999))
+            instance.verification_code = code
+            instance.verification_code_created_at = timezone.now()
+
+            try:
+                # временно сохраняем email
+                instance.email = new_email
+                instance.is_verified_email = False
+                instance.save()
+
+                # запускаем задачу celery  # импортируй путь к задаче
+                send_verificaation_code.delay(instance.id)
+
+                request._email_changed = True
+
+            except Exception as e:
+                # В случае ошибки откатываем email
+                instance.email = old_email
+                instance.is_verified_email = True
+                instance.verification_code = None
+                instance.save()
+                raise ValidationError({"email": "Ошибка при отправке письма. Email не изменён."})
+
+        validated_data.pop('email', None)
+        return super().update(instance, validated_data)
+    
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+
+        # Если email изменён и письмо отправлено — добавим сообщение
+        request = self.context.get('request')
+        if hasattr(request, '_email_changed') and request._email_changed:
+            data['message'] = 'На ваш новый email отправлено письмо с кодом подтверждения. Пожалуйста, подтвердите адрес.'
+
+        return data
+
     def get_active_advertisements(self, obj):
         ads = obj.advertisements.filter(is_active=True)
         return AdvertisementShortListSerializer(ads, many=True).data
@@ -83,3 +131,47 @@ class ChangePasswordSerializer(serializers.Serializer):
     #     if len(value) < 8:
     #         raise serializers.ValidationError("Новый пароль должен содержать минимум 8 символов")
     #     return value
+
+
+class ForgotPasswordSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+    def validate_email(self, value):
+        if not User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("Пользователь с таким email не найден.")
+        return value
+
+    def save(self):
+        user = User.objects.get(email=self.validated_data['email'])
+        code = str(random.randint(1000, 9999))
+        user.password_reset_code = code
+        user.password_reset_code_created_at = timezone.now()
+        user.save()
+        send_password_reset_code.delay(user.id)
+
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    code = serializers.CharField(max_length=6)
+    new_password = serializers.CharField(write_only=True)
+
+    def validate(self, data):
+        try:
+            user = User.objects.get(email=data['email'])
+        except User.DoesNotExist:
+            raise serializers.ValidationError("Неверный email или код.")
+
+        # Проверка срока действия кода (например, 10 минут)
+        if user.password_reset_code != data['code']:
+            raise serializers.ValidationError("Неверный код подтверждения.")
+        if timezone.now() - user.password_reset_code_created_at > timedelta(minutes=10):
+            raise serializers.ValidationError("Код устарел. Запросите новый.")
+
+        self.user = user
+        return data
+
+    def save(self):
+        self.user.set_password(self.validated_data['new_password'])
+        self.user.password_reset_code = None
+        self.user.password_reset_code_created_at = None
+        self.user.save()

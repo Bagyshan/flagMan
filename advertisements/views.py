@@ -1,5 +1,5 @@
 from rest_framework.views import APIView
-from rest_framework import generics
+from rest_framework import generics, views
 from rest_framework import viewsets, permissions, mixins
 from rest_framework.viewsets import ReadOnlyModelViewSet
 from rest_framework.exceptions import PermissionDenied

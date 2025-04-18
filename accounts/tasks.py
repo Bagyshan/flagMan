@@ -4,6 +4,7 @@ from .models import User
 from django.core.mail import EmailMessage
 from django.conf import settings
 import re
+from django.core.mail import send_mail
 
 
 
@@ -16,7 +17,12 @@ def sanitize_email(email):
 
 @shared_task
 def send_verificaation_code(application_id):
-    application = User.objects.get(pk=application_id)
+
+    try:
+        application = User.objects.get(pk=application_id)
+    except User.DoesNotExist:
+        return
+    
     email = application.email
     verification_code = application.verification_code
 
@@ -27,4 +33,13 @@ def send_verificaation_code(application_id):
 
     email_message = EmailMessage(subject, message, from_email, recipient_list)
 
-    email_message.send()
+    email_message.send(fail_silently=False)
+
+
+@shared_task
+def send_password_reset_code(user_id):
+    user = User.objects.get(id=user_id)
+    subject = 'Восстановление пароля'
+    message = f'Ваш код восстановления: {user.password_reset_code}'
+    from_email = sanitize_email('flagman-inc@yandex.ru')
+    send_mail(subject, message, sanitize_email(from_email), [sanitize_email(user.email)])
