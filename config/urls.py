@@ -34,4 +34,5 @@ urlpatterns = [
     path('api/schema/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
     path('api/cars-database-filtration/', include('cars_database_filtration.urls')),
     path('api/advertisements/', include('advertisements.urls')),
+    path('api/favorites', include('favourites.urls'))
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

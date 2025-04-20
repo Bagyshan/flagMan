@@ -220,6 +220,8 @@ class Advertisement(models.Model):
     permission_to_comment = models.CharField(_('Кто может комментировать'), choices=PERMISSION_TO_COMMENT_CHOICES, null=True, blank=True)
     description = models.TextField(_('Описание'), max_length=500, null=True, blank=True)
 
+    favorites_count = models.PositiveIntegerField(_('Количество добавлений в избранное'), default=0)
+
     phone_number = models.CharField(_("Номер телефона"), validators=[validate_kg_phone])
 
     is_active = models.BooleanField(_("Статус активности"), default=True)

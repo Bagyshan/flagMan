@@ -62,7 +62,8 @@ INSTALLED_APPS = [
 
     # apps
     'accounts',
-    'advertisements'
+    'advertisements',
+    'favourites'
 ]
 
 MIDDLEWARE = [

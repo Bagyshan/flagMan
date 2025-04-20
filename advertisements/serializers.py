@@ -4,6 +4,7 @@ from drf_spectacular.utils import extend_schema_serializer, OpenApiExample
 from .models import Advertisement, AdvertisementImage, Complectation, OtherBenefits
 from django.contrib.auth import get_user_model
 from config.settings import CARS_BASE_TOKEN
+from favourites.models import Favorite
 import requests
 
 User = get_user_model()
@@ -69,6 +70,7 @@ class AdvertisementCreateSerializer(serializers.ModelSerializer):
     
 
 class AdvertisementShortListSerializer(serializers.ModelSerializer):
+    is_favorite = serializers.SerializerMethodField()
     images = AdvertisementImageSerializer(many=True, read_only=True)
 
     class Meta:
@@ -91,9 +93,18 @@ class AdvertisementShortListSerializer(serializers.ModelSerializer):
             'price',
             'city',
             'images',
+            'favorites_count',
+            'is_favorite',
             'created_at',
             'updated_at'
         ]
+    
+
+    def get_is_favorite(self, obj):
+        user = self.context['request'].user
+        if user.is_authenticated:
+            return Favorite.objects.filter(user=user, advertisement=obj).exists()
+        return False
 
 
 class OwnerSerializer(serializers.ModelSerializer):
@@ -106,10 +117,17 @@ class AdvertisementFullRetrieveSerializer(serializers.ModelSerializer):
     other = OtherBenefitsSerializer()
     images = AdvertisementImageSerializer(many=True, read_only=True)
     owner = OwnerSerializer(read_only=True)
+    is_favorite = serializers.SerializerMethodField()
 
     class Meta:
         model = Advertisement
         fields = '__all__'
+
+    def get_is_favorite(self, obj):
+        user = self.context['request'].user
+        if user.is_authenticated:
+            return Favorite.objects.filter(user=user, advertisement=obj).exists()
+        return False
     
     def to_representation(self, instance):
         data = super().to_representation(instance)
