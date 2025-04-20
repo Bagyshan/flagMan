@@ -23,6 +23,12 @@ class AdvertisementImageSerializer(serializers.ModelSerializer):
         model = AdvertisementImage
         fields = ['image']
 
+    def get_image(self, obj):
+        request = self.context.get('request')
+        if request:
+            return request.build_absolute_uri(obj.image.url)
+        return obj.image.url
+
 class AdvertisementCreateSerializer(serializers.ModelSerializer):
 
     images = serializers.ListField(

@@ -43,3 +43,16 @@ def send_password_reset_code(user_id):
     message = f'Ваш код восстановления: {user.password_reset_code}'
     from_email = sanitize_email('flagman-inc@yandex.ru')
     send_mail(subject, message, sanitize_email(from_email), [sanitize_email(user.email)])
+
+
+@shared_task
+def send_verificaation_code_to_new_email(user_id):
+    user = User.objects.get(id=user_id)
+    from_email = 'flagman-inc@yandex.ru'
+    if user.new_email:
+        send_mail(
+            'Подтверждение нового email',
+            f'Ваш код подтверждения: {user.new_email_verification_code}',
+            sanitize_email(from_email),
+            [user.new_email],
+        )

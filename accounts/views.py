@@ -19,7 +19,8 @@ from .serializers import (
     UserProfileSerializer,
     ChangePasswordSerializer,
     ForgotPasswordSerializer,
-    PasswordResetConfirmSerializer
+    PasswordResetConfirmSerializer,
+    VerifyNewEmailSerializer
 )
 
 User = get_user_model()
@@ -200,6 +201,31 @@ class UserProfileView(generics.RetrieveUpdateDestroyAPIView):
         user.delete()
 
         return Response({"detail": "Профиль удалён. Токены отозваны, если были переданы."}, status=status.HTTP_204_NO_CONTENT)
+    
+
+class ConfirmNewEmailView(views.APIView):
+    serializer_class = VerifyNewEmailSerializer
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        code = request.data.get("code")
+
+        if not user.new_email or not user.new_email_verification_code:
+            return Response({"detail": "Нет запроса на изменение email."}, status=400)
+
+        if user.new_email_verification_code != code:
+            return Response({"detail": "Неверный код подтверждения."}, status=400)
+
+        # Заменить email
+        user.email = user.new_email
+        user.new_email = None
+        user.new_email_verification_code = None
+        user.new_email_verification_code_created_at = None
+        user.is_verified_email = True
+        user.save()
+
+        return Response({"detail": "Email успешно подтверждён и обновлён."}, status=200)
     
 
 

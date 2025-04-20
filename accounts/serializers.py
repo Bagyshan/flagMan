@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from advertisements.serializers import AdvertisementShortListSerializer
 from django.core.exceptions import ValidationError
 import random
-from accounts.tasks import send_verificaation_code, send_password_reset_code
+from accounts.tasks import send_verificaation_code, send_password_reset_code, send_verificaation_code_to_new_email
 from django.utils import timezone
 from datetime import timedelta
 
@@ -18,6 +18,10 @@ class RegistrationSerializer(serializers.ModelSerializer):
 class VerifyEmailSerializer(serializers.Serializer):
     email = serializers.CharField(required=True)
     verification_code = serializers.CharField(required=True, style={'input_type': 'verification_code'})
+
+
+class VerifyNewEmailSerializer(serializers.Serializer):
+    code = serializers.CharField(required=True, style={'input_type': 'verification_code'})
 
 
 class SetPasswordSerializer(serializers.Serializer):
@@ -72,48 +76,35 @@ class UserProfileSerializer(serializers.ModelSerializer):
         if new_email and new_email != old_email:
             # Генерация 4-значного кода
             code = str(random.randint(1000, 9999))
-            instance.verification_code = code
-            instance.verification_code_created_at = timezone.now()
+            instance.new_email = new_email
+            instance.new_email_verification_code = code
+            instance.new_email_verification_code_created_at = timezone.now()
 
             try:
-                # временно сохраняем email
-                instance.email = new_email
-                instance.is_verified_email = False
-                instance.save()
-
-                # запускаем задачу celery  # импортируй путь к задаче
-                send_verificaation_code.delay(instance.id)
-
+                # Отправка кода подтверждения на новую почту
+                send_verificaation_code_to_new_email.delay(instance.id)  # укажи нужную задачу
                 request._email_changed = True
-
-            except Exception as e:
-                # В случае ошибки откатываем email
-                instance.email = old_email
-                instance.is_verified_email = True
-                instance.verification_code = None
                 instance.save()
+            except Exception as e:
                 raise ValidationError({"email": "Ошибка при отправке письма. Email не изменён."})
 
         validated_data.pop('email', None)
         return super().update(instance, validated_data)
-    
+
     def to_representation(self, instance):
         data = super().to_representation(instance)
-
-        # Если email изменён и письмо отправлено — добавим сообщение
         request = self.context.get('request')
         if hasattr(request, '_email_changed') and request._email_changed:
             data['message'] = 'На ваш новый email отправлено письмо с кодом подтверждения. Пожалуйста, подтвердите адрес.'
-
         return data
 
     def get_active_advertisements(self, obj):
         ads = obj.advertisements.filter(is_active=True)
-        return AdvertisementShortListSerializer(ads, many=True).data
+        return AdvertisementShortListSerializer(ads, many=True, context=self.context).data
 
     def get_inactive_advertisements(self, obj):
         ads = obj.advertisements.filter(is_active=False)
-        return AdvertisementShortListSerializer(ads, many=True).data
+        return AdvertisementShortListSerializer(ads, many=True, context=self.context).data
     
 
 

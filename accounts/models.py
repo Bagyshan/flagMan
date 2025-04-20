@@ -29,6 +29,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     verification_code_created_at = models.DateTimeField(_('Дата создания кода подтверждения'), blank=True, null=True)
     password_reset_code = models.CharField(_("Код сброса пароля"), max_length=6, null=True, blank=True)
     password_reset_code_created_at = models.DateTimeField(_("Дата создания кода сброса пароля"), null=True, blank=True)
+    new_email = models.EmailField(_('Новый Email'), null=True, blank=True)
+    new_email_verification_code = models.CharField(_('Код подтверждения нового Email'), max_length=6, null=True, blank=True)
+    new_email_verification_code_created_at = models.DateTimeField(_('Дата создания кода подтверждения нового Email'), null=True, blank=True)
     registered_at = models.DateTimeField(_('Дата регистрации'), auto_now_add=True)
     updated_at = models.DateTimeField(_('Дата обновления'), auto_now=True)
     
