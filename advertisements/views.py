@@ -238,3 +238,21 @@ class OtherBenefitsMetaInfoView(APIView):
         }
         return Response(field_info)
     
+
+class AdvertisementChoicesView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        return Response({
+            "color": dict(Advertisement.COLOR_CHOICES),
+            "state": dict(Advertisement.STATE_CHOICES),
+            "availability_in_kyrgyzstan": dict(Advertisement.AVAILABILITY_IN_KYRGYZSTAN_CHOICES),
+            "country_of_registration": dict(Advertisement.COUNTRY_OF_REGISTRATION_CHOICES),
+            "possibility_of_exchange": dict(Advertisement.POSSIBILITY_OF_EXCHANGE_CHOICES),
+            "currency": dict(Advertisement.CURRENCY_CHOICES),
+            "region": dict(Advertisement.REGION_CHOICES),
+            "city": dict(Advertisement.CITY_CHOICES),
+            "permission_to_comment": dict(Advertisement.PERMISSION_TO_COMMENT_CHOICES),
+            "units_of_mileage": dict(Advertisement.UNITS_OF_MILEAGE_CHOICES),
+        })
+    
