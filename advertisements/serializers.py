@@ -94,6 +94,7 @@ class AdvertisementShortListSerializer(serializers.ModelSerializer):
             'city',
             'images',
             'favorites_count',
+            'views',
             'is_favorite',
             'created_at',
             'updated_at'

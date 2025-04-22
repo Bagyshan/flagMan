@@ -221,6 +221,7 @@ class Advertisement(models.Model):
     description = models.TextField(_('Описание'), max_length=500, null=True, blank=True)
 
     favorites_count = models.PositiveIntegerField(_('Количество добавлений в избранное'), default=0)
+    views = models.PositiveIntegerField(_("Количество просмотров"), default=0)
 
     phone_number = models.CharField(_("Номер телефона"), validators=[validate_kg_phone])
 

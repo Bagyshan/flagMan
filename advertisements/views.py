@@ -13,6 +13,7 @@ from rest_framework.parsers import MultiPartParser
 from django_filters.rest_framework import DjangoFilterBackend
 from .filters import AdvertisementFilter
 from rest_framework.filters import OrderingFilter
+from django.core.cache import cache
 
 
 @extend_schema(
@@ -183,6 +184,27 @@ class AdvertisementGetViewSet(ReadOnlyModelViewSet):
         if self.action == 'retrieve':
             return AdvertisementFullRetrieveSerializer
         return AdvertisementShortListSerializer
+    
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        user = request.user if request.user.is_authenticated else None
+        user_or_ip = user.id if user else self.get_client_ip(request)
+
+        cache_key = f"viewed_{instance.id}_{user_or_ip}"
+
+        if not cache.get(cache_key):
+            instance.views += 1
+            instance.save(update_fields=["views"])
+            cache.set(cache_key, True, timeout=60 * 60 * 24)  # 24 часа
+
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
+    def get_client_ip(self, request):
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            ip = x_forwarded_for.split(',')[0]
+        return request.META.get('REMOTE_ADDR', '')
     
 
 @extend_schema(
