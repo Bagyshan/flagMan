@@ -11,7 +11,7 @@ services:
       - media_volume:/usr/src/app/media
     environment:
       - DJANGO_SETTINGS_MODULE=config.settings
-      - ALLOWED_HOSTS=flagman-backend.com.kg
+      - ALLOWED_HOSTS=*
       - DEBUG=True
     # ports:
     #   - "8000:8000"
