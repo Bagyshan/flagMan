@@ -3,8 +3,8 @@ version: '3.10'
 services:
   backend:
     build: ./
-    command: >
-      sh -c "gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 2"
+    command: > # sh -c "gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 2"
+      sh -c "daphne -b 0.0.0.0 -p 8000 config.asgi:application"
     volumes:
       - ./:/usr/src/app/
       - static_volume:/usr/src/app/static

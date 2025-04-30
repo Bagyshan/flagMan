@@ -59,11 +59,13 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'rest_framework.authtoken',
     'rest_framework_simplejwt.token_blacklist',
+    'channels',
 
     # apps
     'accounts',
     'advertisements',
-    'favourites'
+    'favourites',
+    'chat'
 ]
 
 MIDDLEWARE = [
@@ -95,13 +97,15 @@ CACHES = {
     }
 }
 
-CACHE_TTL = os.getenv('CACHE_TTL')
+CACHE_TTL = 60 * 60 * 24 
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=20),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
+    "ALGORITHM": "HS256",
+    "SIGNING_KEY": SECRET_KEY,
     'AUTH_HEADER_TYPES': ('Bearer',)
 }
 
@@ -129,6 +133,23 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
+ASGI_APPLICATION = 'config.asgi.application'
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [os.getenv('WEBSOCKET_REDIS_URL')],  # НЕ 127.0.0.1, а имя контейнера в docker-compose!
+            "capacity": int(os.getenv('WEBSOCKET_REDIS_CAPACITY')),  # можно настроить буфер сообщений
+            "expiry": 60 * 60,  # время жизни каналов
+            # "database": 2,  # <<< Важно: используем 2-ю базу Redis для каналов
+        },
+    },
+}
+
+
+
+DJANGO_SETTINGS_MODULE="config.settings"
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
