@@ -5,6 +5,12 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 
 
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'name', 'last_login', 'avatar', 'is_company']
+
 class ChatSerializer(serializers.ModelSerializer):
     participants = serializers.PrimaryKeyRelatedField(
         queryset=User.objects.all(), many=True, required=False
@@ -22,6 +28,11 @@ class ChatSerializer(serializers.ModelSerializer):
         for user in other_users:
             chat.participants.add(user)
         return chat
+
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        rep['participants'] = UserSerializer(instance.participants.all(), many=True).data
+        return rep
 
 class MessageSerializer(serializers.ModelSerializer):
     class Meta:
