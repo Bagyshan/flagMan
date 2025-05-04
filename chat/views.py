@@ -3,7 +3,7 @@ from django.shortcuts import render
 # Create your views here.
 from rest_framework import generics, permissions
 from .models import Chat, Message
-from .serializers import ChatSerializer, MessageSerializer
+from .serializers import ChatSerializer, MessageSerializer, ChatDetailSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
@@ -37,6 +37,16 @@ class MessageListCreateAPIView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         chat_id = self.kwargs['chat_id']
         serializer.save(chat_id=chat_id, sender=self.request.user)
+
+
+class ChatRetrieveAPIView(generics.RetrieveAPIView):
+    queryset = Chat.objects.all()
+    serializer_class = ChatDetailSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return Chat.objects.filter(participants=self.request.user)
+
 
 
 class WebSocketInfoAPIView(APIView):
