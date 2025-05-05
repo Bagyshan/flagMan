@@ -70,14 +70,55 @@ class UserSerializer(serializers.ModelSerializer):
 #         rep['participants'] = UserSerializer(instance.participants.all(), many=True, context=self.context).data
 #         return rep
     
+# class ChatSerializer(serializers.ModelSerializer):
+#     participants = serializers.SerializerMethodField()
+
+#     class Meta:
+#         model = Chat
+#         fields = ['id', 'participants', 'created_at']
+
+#     def get_participants(self, obj):
+#         request_user = self.context['request'].user
+#         other_users = obj.participants.exclude(id=request_user.id)
+#         return UserSerializer(other_users, many=True, context=self.context).data
+
+#     def create(self, validated_data):
+#         request_user = self.context['request'].user
+#         other_users = validated_data.get('participants', [])
+
+#         if len(other_users) != 1:
+#             raise serializers.ValidationError("Chat must be between exactly two users.")
+
+#         other_user = other_users[0]
+#         desired_ids = {request_user.id, other_user.id}
+
+#         existing_chats = Chat.objects.annotate(
+#             num_participants=models.Count('participants')
+#         ).filter(num_participants=2)
+
+#         for chat in existing_chats:
+#             chat_user_ids = set(chat.participants.values_list('id', flat=True))
+#             if chat_user_ids == desired_ids:
+#                 return chat
+
+#         chat = Chat.objects.create()
+#         chat.participants.add(request_user, other_user)
+#         return chat
+
+
 class ChatSerializer(serializers.ModelSerializer):
-    participants = serializers.SerializerMethodField()
+    participants = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.all(),
+        many=True,
+        write_only=True
+    )
+    participants_info = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Chat
-        fields = ['id', 'participants', 'created_at']
+        fields = ['id', 'participants', 'participants_info', 'created_at']
 
-    def get_participants(self, obj):
+    def get_participants_info(self, obj):
         request_user = self.context['request'].user
         other_users = obj.participants.exclude(id=request_user.id)
         return UserSerializer(other_users, many=True, context=self.context).data
@@ -86,21 +127,21 @@ class ChatSerializer(serializers.ModelSerializer):
         request_user = self.context['request'].user
         other_users = validated_data.get('participants', [])
 
-        if len(other_users) != 1:
+        if not isinstance(other_users, list) or len(other_users) != 1:
             raise serializers.ValidationError("Chat must be between exactly two users.")
 
         other_user = other_users[0]
         desired_ids = {request_user.id, other_user.id}
 
-        existing_chats = Chat.objects.annotate(
-            num_participants=models.Count('participants')
-        ).filter(num_participants=2)
+        # Ищем чат с теми же двумя участниками
+        existing_chats = Chat.objects.annotate(num_participants=models.Count('participants')).filter(num_participants=2)
 
         for chat in existing_chats:
             chat_user_ids = set(chat.participants.values_list('id', flat=True))
             if chat_user_ids == desired_ids:
                 return chat
 
+        # Если не найден — создаём новый
         chat = Chat.objects.create()
         chat.participants.add(request_user, other_user)
         return chat
