@@ -368,6 +368,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 'type': 'chat_message',
                 'message': message_obj.content,
                 'sender': self.user.email,
+                'sender_name': self.user.name,
                 'created_at': created_at_bishkek.strftime('%d.%m.%Y %H:%M')
             }
         )
@@ -377,6 +378,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await self.send(text_data=json.dumps({
             'message': event['message'],
             'sender': event['sender'],
+            'sender_name': event['sender_name'],
             'created_at': event['created_at'],
         }))
 

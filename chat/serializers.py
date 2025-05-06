@@ -2,6 +2,11 @@ from rest_framework import serializers
 from .models import Chat, Message
 from django.contrib.auth import get_user_model
 from django.db import models
+import pytz
+from django.utils.timezone import localtime
+
+
+KZ_TZ = pytz.timezone('Asia/Bishkek')
 
 User = get_user_model()
 
@@ -204,7 +209,17 @@ class ChatDetailSerializer(serializers.ModelSerializer):
         ).data
 
 class MessageSerializer(serializers.ModelSerializer):
+    name = serializers.SerializerMethodField()
+    created_at = serializers.SerializerMethodField()
+
     class Meta:
         model = Message
-        fields = ['id', 'chat', 'sender', 'content', 'created_at']
+        fields = ['id', 'chat', 'sender', 'name', 'content', 'created_at']
         read_only_fields = ['sender', 'chat']
+
+    def get_name(self, obj):
+        return obj.sender.name or obj.sender.email
+
+    def get_created_at(self, obj):
+        created_at_bishkek = localtime(obj.created_at, timezone=KZ_TZ)
+        return created_at_bishkek.strftime('%d.%m.%Y %H:%M')
