@@ -209,15 +209,18 @@ class ChatDetailSerializer(serializers.ModelSerializer):
         ).data
 
 class MessageSerializer(serializers.ModelSerializer):
-    name = serializers.SerializerMethodField()
+    sender_name = serializers.SerializerMethodField()
     created_at = serializers.SerializerMethodField()
 
     class Meta:
         model = Message
-        fields = ['id', 'chat', 'sender', 'name', 'content', 'created_at']
+        fields = ['id', 'chat', 'sender', 'sender_name', 'content', 'created_at']
         read_only_fields = ['sender', 'chat']
 
-    def get_name(self, obj):
+    def get_sender_name(self, obj):
+        request = self.context.get('request')
+        if request and request.user == obj.sender:
+            return "me"
         return obj.sender.name or obj.sender.email
 
     def get_created_at(self, obj):
