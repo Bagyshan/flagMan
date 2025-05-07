@@ -32,12 +32,15 @@ from django.core.cache import cache
                 'modification': {'type': 'string', 'example': 'Competition'},
                 'steering_wheel': {'type': 'string', 'example': 'Левый'},
                 'color': {
-                    'type': 'string',
-                    'enum': ['black', 'silver', 'white', 'grey', 'beige', 'turquoise',
-                             'burgundy', 'bronze', 'cherry', 'white blue', 'yellow', 'green',
-                             'gold', 'brown', 'red', 'orange', 'pink', 'blue',
-                             'lilac', 'violet', 'chameleon', 'eggplant'],
-                    'example': 'black'
+                    'type': 'string',    
+                    'enum': [
+                        '#000000', '#C0C0C0', '#FFFFFF', '#808080', '#F5F5DC',
+                        '#40E0D0', '#800020', '#CD7F32', '#DE3163', '#ADD8E6',
+                        '#FFFF00', '#008000', '#FFD700', '#A52A2A', '#FF0000',
+                        '#FFA500', '#FFC0CB', '#0000FF', '#C8A2C8', '#8F00FF',
+                        '#7FFF00', '#580F41'
+                    ],
+                    'example': '#000000'
                 },
                 'state': {
                     'type': 'string',
@@ -234,6 +237,88 @@ class AdvertisementUpdateDeleteViewSet(
         if instance.owner != self.request.user:
             raise PermissionDenied("Вы не можете удалить это объявление.")
         instance.delete()
+
+    @extend_schema(
+        methods=["PATCH"],
+        request={
+            'multipart/form-data': {
+                'type': 'object',
+                'properties': {
+                    'mark': {'type': 'string', 'example': 'BMW'},
+                    'model': {'type': 'string', 'example': 'BMW_M3'},
+                    'year_of_manufacture': {'type': 'integer', 'example': 2024},
+                    'generation': {'type': 'integer', 'example': 23978803},
+                    'notice': {'type': 'string', 'example': 'седан'},
+                    'engine_type': {'type': 'string', 'example': 'бензин'},
+                    'drive': {'type': 'string', 'example': 'полный'},
+                    'transmission': {'type': 'string', 'example': 'автоматическая'},
+                    'modification': {'type': 'string', 'example': 'Competition'},
+                    'steering_wheel': {'type': 'string', 'example': 'Левый'},
+                    'color': {'type': 'string', 'example': '#000000'},
+                    'state': {'type': 'string', 'example': 'good'},
+                    'mileage': {'type': 'integer', 'example': 100000},
+                    'units_of_mileage': {'type': 'string', 'example': 'km'},
+                    'availability_in_kyrgyzstan': {'type': 'string', 'example': 'yes'},
+                    'customs_in_kyrgyzstan': {'type': 'boolean', 'example': True},
+                    'urgently': {'type': 'boolean', 'example': False},
+                    'country_of_registration': {'type': 'string', 'example': 'kyrgyzstan'},
+                    'possibility_of_exchange': {'type': 'string', 'example': 'consider the options'},
+                    'possibility_of_installments': {'type': 'boolean', 'example': True},
+                    'currency': {'type': 'string', 'example': 'USD'},
+                    'price': {'type': 'integer', 'example': 12000},
+                    'region': {'type': 'string', 'example': 'chui'},
+                    'city': {'type': 'string', 'example': 'bishkek'},
+                    'permission_to_comment': {'type': 'string', 'example': 'authenticated'},
+                    'description': {'type': 'string', 'example': 'Автомобиль в отличном состоянии'},
+                    'phone_number': {'type': 'string', 'example': '+996700123456'},
+                    'complectation': {
+                        'type': 'string',
+                        'example': '{"ABS": true, "USB": true}'
+                    },
+                    'other': {
+                        'type': 'string',
+                        'example': '{"recently_imported": true, "tax_paid": true}'
+                    },
+                    'images': {
+                        'type': 'array',
+                        'items': {
+                            'type': 'string',
+                            'format': 'binary'
+                        },
+                        'description': 'Новые изображения (необязательно)',
+                    },
+                    'deleted_images': {
+                        'type': 'array',
+                        'items': {'type': 'integer'},
+                        'description': 'ID изображений, которые нужно удалить'
+                    },
+                },
+            }
+        },
+        responses={
+            status.HTTP_200_OK: AdvertisementCreateSerializer,
+            status.HTTP_400_BAD_REQUEST: OpenApiTypes.OBJECT,
+            status.HTTP_403_FORBIDDEN: OpenApiTypes.OBJECT,
+        },
+        examples=[
+            OpenApiExample(
+                "Обновление объявления",
+                value={
+                    "mark": "BMW",
+                    "model": "BMW_M3",
+                    "year_of_manufacture": 2024,
+                    "color": "#000000",
+                    "mileage": 80000,
+                    "complectation": '{"MP3": true, "CD": false}',
+                    "other": '{"technical_inspection_passed": true}'
+                },
+                request_only=True
+            )
+        ],
+        tags=["advertisements edit"]
+    )
+    def partial_update(self, request, *args, **kwargs):
+        return super().partial_update(request, *args, **kwargs)
     
 
 class AdvertisementMetaInfoView(APIView):

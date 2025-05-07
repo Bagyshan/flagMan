@@ -22,7 +22,7 @@ class OtherBenefitsSerializer(serializers.ModelSerializer):
 class AdvertisementImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = AdvertisementImage
-        fields = ['image']
+        fields = ['id', 'image']
 
     def get_image(self, obj):
         request = self.context.get('request')
@@ -33,7 +33,15 @@ class AdvertisementImageSerializer(serializers.ModelSerializer):
 class AdvertisementCreateSerializer(serializers.ModelSerializer):
 
     images = serializers.ListField(
-        child=serializers.ImageField(), write_only=True
+        child=serializers.ImageField(),
+        write_only=True,
+        required=False,
+        allow_empty=True
+    )
+    deleted_images = serializers.ListField(
+        child=serializers.IntegerField(),
+        write_only=True,
+        required=False
     )
     # images = AdvertisementImageSerializer(many=True, required=False, write_only=True)
     complectation = serializers.JSONField(required=False, write_only=True)
@@ -67,6 +75,49 @@ class AdvertisementCreateSerializer(serializers.ModelSerializer):
             AdvertisementImage.objects.create(advertisement=advertisement, image=image)
 
         return advertisement
+    
+    def update(self, instance, validated_data):
+        request = self.context.get('request')
+
+        complectation_data = validated_data.pop('complectation', None)
+        other_data = validated_data.pop('other', None)
+        images_data = validated_data.pop('images', None)
+        deleted_images = validated_data.pop('deleted_images', [])
+
+        # Удаление отдельных изображений по ID
+        if deleted_images:
+            AdvertisementImage.objects.filter(id__in=deleted_images, advertisement=instance).delete()
+
+        # Добавление новых изображений
+        if images_data:
+            for image in images_data:
+                AdvertisementImage.objects.create(advertisement=instance, image=image)
+
+        # Обновляем complectation
+        if complectation_data:
+            if instance.complectation:
+                for key, value in complectation_data.items():
+                    setattr(instance.complectation, key, value)
+                instance.complectation.save()
+            else:
+                complectation = Complectation.objects.create(**complectation_data)
+                instance.complectation = complectation
+
+        # Обновляем other
+        if other_data:
+            if instance.other:
+                for key, value in other_data.items():
+                    setattr(instance.other, key, value)
+                instance.other.save()
+            else:
+                other = OtherBenefits.objects.create(**other_data)
+                instance.other = other
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
+        instance.save()
+        return instance
     
 
 class AdvertisementShortListSerializer(serializers.ModelSerializer):
