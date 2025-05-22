@@ -285,3 +285,27 @@ class PasswordResetConfirmView(views.APIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response({"detail": "Пароль успешно изменён."}, status=status.HTTP_200_OK)
+    
+
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from .models import FCMDevice
+
+class RegisterFCMTokenView(APIView):
+    permission_classes = [IsAuthenticated] 
+
+    def post(self, request):
+        token = request.data.get("token")
+        user = request.user
+
+        if not token:
+            return Response({"error": "Token required"}, status=400)
+
+        # Обновим user, если токен уже существует, или создадим новый
+        FCMDevice.objects.update_or_create(
+            token=token,
+            defaults={"user": user}
+        )
+
+        return Response({"status": "registered"})

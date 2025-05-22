@@ -14,7 +14,8 @@ from .views import (
     LogoutView,
     ForgotPasswordView,
     PasswordResetConfirmView,
-    ConfirmNewEmailView
+    ConfirmNewEmailView,
+    RegisterFCMTokenView
 )
 
 urlpatterns = [
@@ -31,4 +32,5 @@ urlpatterns = [
     path('forgot-password/', ForgotPasswordView.as_view(), name='forgot-password'),
     path('reset-password/', PasswordResetConfirmView.as_view(), name='reset-password'),
     path('confirm-new-email/', ConfirmNewEmailView.as_view(), name='confirm-new-email'),
+    path('save-fmc-token/', RegisterFCMTokenView.as_view(), name='save-fmc-token'),
 ]

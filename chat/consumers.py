@@ -320,6 +320,7 @@ from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.backends import TokenBackend
 from django.utils.timezone import localtime
+from accounts.tasks import send_fcm_notification_task
 import pytz
 
 
@@ -373,6 +374,31 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 'created_at': created_at_bishkek.strftime('%d.%m.%Y %H:%M')
             }
         )
+
+        await self.send_push_notifications(message_obj)
+
+    async def send_push_notifications(self, message_obj):
+        other_participants = await self.get_other_participants(self.chat_id, self.user.id)
+
+        for user in other_participants:
+            tokens = await self.get_fcm_tokens(user)
+            for token in tokens:
+                title = f"Новое сообщение от {self.user.name}"
+                body = message_obj.content
+                await self.send_push(token, title, body)
+
+    @database_sync_to_async
+    def get_fcm_tokens(self, user):
+        return list(user.fcm_tokens.values_list('token', flat=True))
+    
+    @database_sync_to_async
+    def get_other_participants(self, chat_id, user_id):
+        chat = Chat.objects.get(id=chat_id)
+        return chat.participants.exclude(id=user_id)
+    
+    @database_sync_to_async
+    def send_push(self, fcm_token, title, body):
+        send_fcm_notification_task.delay(fcm_token, title, body)
 
 
     async def chat_message(self, event):

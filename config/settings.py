@@ -403,3 +403,6 @@ JAZZMIN_UI_TWEAKS = {
     },
     "actions_sticky_top": True
 }
+
+
+FIREBASE_CREDENTIALS_PATH = os.path.join(BASE_DIR, os.getenv('FIREBASE_CREDENTIALS_NAME'))
