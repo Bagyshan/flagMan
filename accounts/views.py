@@ -302,7 +302,7 @@ class RegisterFCMTokenView(APIView):
 
     @extend_schema(
         request={
-            'json': {
+            'multipart/form-data': {
                 'type': 'object',
                 'properties': {
                     'token': {
