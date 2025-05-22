@@ -291,10 +291,44 @@ class PasswordResetConfirmView(views.APIView):
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import FCMDevice
+from rest_framework import status
+from drf_spectacular.utils import extend_schema, OpenApiExample, OpenApiTypes
+from rest_framework.response import Response
+
 
 class RegisterFCMTokenView(APIView):
     permission_classes = [IsAuthenticated] 
 
+
+    @extend_schema(
+        request={
+            'json': {
+                'type': 'object',
+                'properties': {
+                    'token': {
+                        'type': 'string',
+                        'description': 'FCM токен устройства',
+                        'example': 'dGhpc19pc19hX3Rlc3RfdG9rZW5fMTIz'
+                    }
+                },
+                'required': ['token']
+            }
+        },
+        responses={
+            status.HTTP_200_OK: OpenApiTypes.OBJECT,
+            status.HTTP_400_BAD_REQUEST: OpenApiTypes.OBJECT
+        },
+        examples=[
+            OpenApiExample(
+                "Пример регистрации FCM токена",
+                value={
+                    "token": "dGhpc19pc19hX3Rlc3RfdG9rZW5fMTIz"
+                },
+                request_only=True
+            )
+        ],
+        tags=["Push Notifications"]
+    )
     def post(self, request):
         token = request.data.get("token")
         user = request.user
