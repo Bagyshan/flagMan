@@ -393,8 +393,11 @@ class ChatConsumer(AsyncWebsocketConsumer):
     
     @database_sync_to_async
     def get_other_participants(self, chat_id, user_id):
-        chat = Chat.objects.get(id=chat_id)
-        return chat.participants.exclude(id=user_id)
+        try:
+            chat = Chat.objects.get(id=chat_id)
+            return list(chat.participants.exclude(id=user_id))
+        except Chat.DoesNotExist:
+            return []
     
     @database_sync_to_async
     def send_push(self, fcm_token, title, body):

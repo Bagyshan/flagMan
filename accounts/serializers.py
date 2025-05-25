@@ -59,13 +59,15 @@ class UserLoginSerializer(serializers.Serializer):
 class UserProfileSerializer(serializers.ModelSerializer):
     active_advertisements = serializers.SerializerMethodField()
     inactive_advertisements = serializers.SerializerMethodField()
+    favorites_count = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = [
             'id', 'name', 'email', 'avatar', 'is_company',
             'registered_at', 'updated_at', 'registered_at',
-            'active_advertisements', 'inactive_advertisements'
+            'active_advertisements', 'inactive_advertisements',
+            'favorites_count'
         ]
 
     def update(self, instance, validated_data):
@@ -105,6 +107,9 @@ class UserProfileSerializer(serializers.ModelSerializer):
     def get_inactive_advertisements(self, obj):
         ads = obj.advertisements.filter(is_active=False)
         return AdvertisementShortListSerializer(ads, many=True, context=self.context).data
+ 
+    def get_favorites_count(self, obj):
+        return obj.favorites.count()       
     
 
 

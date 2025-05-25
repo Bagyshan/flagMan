@@ -48,7 +48,6 @@ django.setup()
 from channels.routing import ProtocolTypeRouter, URLRouter
 from channels.auth import AuthMiddlewareStack
 from chat.routing import websocket_urlpatterns
-from chat.middleware import JWTAuthMiddleware
 
 
 application = ProtocolTypeRouter({
