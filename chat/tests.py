@@ -57,3 +57,48 @@ print("{\n  \"message\": \"Привет хочешь машину купить?\
     0
   ]
 }
+
+
+
+{
+    "unread_messages": [
+        {
+            "id": 353,
+            "chat": 54,
+            "sender": 2,
+            "sender_name": "me",
+            "content": "Еще раз привет",
+            "is_read": false,
+            "created_at": "25.05.2025 14:35"
+        },
+        {
+            "id": 354,
+            "chat": 54,
+            "sender": 2,
+            "sender_name": "me",
+            "content": "мне нужна эта машина",
+            "is_read": false,
+            "created_at": "25.05.2025 14:35"
+        }
+    ],
+    "read_messages": [
+        {
+            "id": 352,
+            "chat": 54,
+            "sender": 2,
+            "sender_name": "me",
+            "content": "Еще раз привет",
+            "is_read": true,
+            "created_at": "25.05.2025 14:30"
+        },
+        {
+            "id": 351,
+            "chat": 54,
+            "sender": 2,
+            "sender_name": "me",
+            "content": "мне нужна эта машина",
+            "is_read": true,
+            "created_at": "25.05.2025 14:30"
+        }
+    ]
+}

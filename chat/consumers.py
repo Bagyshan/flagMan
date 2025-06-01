@@ -1,314 +1,3 @@
-# import json
-# from channels.generic.websocket import AsyncWebsocketConsumer
-# from channels.db import database_sync_to_async
-# from .models import Chat, Message
-# from django.contrib.auth import get_user_model
-
-# User = get_user_model()
-
-# class ChatConsumer(AsyncWebsocketConsumer):
-#     async def connect(self):
-#         self.chat_id = self.scope['url_route']['kwargs']['chat_id']
-#         self.chat_group_name = f'chat_{self.chat_id}'
-
-#         # Подключаемся к группе чата
-#         await self.channel_layer.group_add(
-#             self.chat_group_name,
-#             self.channel_name
-#         )
-
-#         await self.accept()
-
-#     async def disconnect(self, close_code):
-#         # Отключаемся от группы
-#         await self.channel_layer.group_discard(
-#             self.chat_group_name,
-#             self.channel_name
-#         )
-
-#     # При получении сообщения с WebSocket
-#     async def receive(self, text_data):
-#         try:
-#             data = json.loads(text_data)
-#             message = data['message']
-#             sender_id = self.scope["user"].id
-#         except json.JSONDecodeError:
-#             await self.send(text_data=json.dumps({
-#                 'error': 'Invalid JSON'
-#             }))
-
-#         # Сохраняем сообщение в БД
-#         await self.save_message(sender_id, self.chat_id, message)
-
-#         # Рассылаем сообщение всем в группе
-#         await self.channel_layer.group_send(
-#             self.chat_group_name,
-#             {
-#                 'type': 'chat_message',
-#                 'message': message,
-#                 'sender_id': sender_id,
-#             }
-#         )
-
-#     async def chat_message(self, event):
-#         await self.send(text_data=json.dumps({
-#             'message': event['message'],
-#             'sender_id': event['sender_id'],
-#         }))
-
-#     @database_sync_to_async
-#     def save_message(self, sender_id, chat_id, message):
-#         sender = User.objects.get(id=sender_id)
-#         chat = Chat.objects.get(id=chat_id)
-#         return Message.objects.create(chat=chat, sender=sender, content=message)
-
-
-# import json
-# from channels.generic.websocket import AsyncWebsocketConsumer
-# from channels.db import database_sync_to_async
-# from .models import Chat, Message
-# from django.contrib.auth import get_user_model
-# import logging
-
-# logger = logging.getLogger(__name__)
-
-# User = get_user_model()
-
-# class ChatConsumer(AsyncWebsocketConsumer):
-#     async def connect(self):
-#         user = self.scope["user"]
-#         if not user.is_authenticated:
-#             logger.warning("Unauthenticated user tried to connect.")
-#             await self.close()
-#             return
-#         # if not user.is_authenticated:
-#         #     await self.close()
-#         #     return
-
-#         self.receiver_id = int(self.scope['url_route']['kwargs']['receiver_id'])
-#         self.receiver = await self.get_user(self.receiver_id)
-#         if not self.receiver:
-#             logger.warning(f"Receiver with ID {self.receiver_id} does not exist.")
-#             await self.close()
-#             return
-#         # if not self.receiver:
-#         #     await self.close()
-#         #     return
-
-#         self.chat = await self.get_or_create_chat(user, self.receiver)
-#         self.chat_group_name = f'chat_{self.chat.id}'
-
-#         await self.channel_layer.group_add(self.chat_group_name, self.channel_name)
-#         await self.accept()
-
-#     async def disconnect(self, close_code):
-#         if hasattr(self, 'chat_group_name'):
-#             await self.channel_layer.group_discard(self.chat_group_name, self.channel_name)
-
-
-#     async def receive(self, text_data):
-#         try:
-#             data = json.loads(text_data)
-#             message = data.get('message')
-#             if not message:
-#                 return
-#         except json.JSONDecodeError:
-#             await self.send(text_data=json.dumps({'error': 'Invalid JSON'}))
-#             return
-
-#         sender = self.scope["user"]
-#         msg_obj = await self.save_message(self.chat, sender, message)
-
-#         await self.channel_layer.group_send(
-#             self.chat_group_name,
-#             {
-#                 'type': 'chat_message',
-#                 'message': msg_obj.content,
-#                 'sender_id': sender.id,
-#             }
-#         )
-
-#     async def chat_message(self, event):
-#         await self.send(text_data=json.dumps({
-#             'message': event['message'],
-#             'sender_id': event['sender_id'],
-#         }))
-
-#     @database_sync_to_async
-#     def get_user(self, user_id):
-#         try:
-#             return User.objects.get(id=user_id)
-#         except User.DoesNotExist:
-#             return None
-
-#     @database_sync_to_async
-#     def get_or_create_chat(self, user1, user2):
-#         chat = Chat.objects.filter(participants=user1).filter(participants=user2).first()
-#         if chat:
-#             return chat
-#         chat = Chat.objects.create()
-#         chat.participants.add(user1, user2)
-#         return chat
-
-#     @database_sync_to_async
-#     def save_message(self, chat, sender, content):
-#         return Message.objects.create(chat=chat, sender=sender, content=content)
-
-
-
-# import json
-# from channels.generic.websocket import AsyncWebsocketConsumer
-# from channels.db import database_sync_to_async
-# from .models import Chat, Message
-# from django.contrib.auth import get_user_model
-# from django.db.models import Count
-
-# User = get_user_model()
-
-# class ChatConsumer(AsyncWebsocketConsumer):
-#     # async def connect(self):
-#     #     self.user = self.scope["user"]
-#     #     if not self.user.is_authenticated:
-#     #         await self.close()
-#     #         return
-
-#     #     # Временно ставим None — будет установлен при первом receive
-#     #     self.chat = None
-#     #     await self.accept()
-#     @database_sync_to_async
-#     def get_user(self, user_id):
-#         try:
-#             return User.objects.get(id=int(user_id))
-#         except User.DoesNotExist:
-#             return None
-
-
-#     async def connect(self):
-#         self.user = self.scope["user"]
-#         if not self.user.is_authenticated:
-#             await self.close()
-#             return
-
-#         try:
-#             receiver_id = self.scope['url_route']['kwargs']['receiver_id']
-#             self.receiver = await self.get_user(int(receiver_id))
-#             if not self.receiver:
-#                 await self.send(text_data=json.dumps({"error": "Receiver not found"}))
-#                 await self.close()
-#                 return
-
-#             # Получаем или создаём чат
-#             self.chat = await self.get_or_create_chat(int(self.user.id), int(self.receiver.id))
-#             self.chat_group_name = f"chat_{self.chat.id}"
-
-#             await self.channel_layer.group_add(
-#                 self.chat_group_name,
-#                 self.channel_name
-#             )
-#             await self.accept()
-
-#         except KeyError:
-#             await self.send(text_data=json.dumps({"error": "Missing receiver_id in URL"}))
-#             await self.close()
-
-#     async def disconnect(self, close_code):
-#         if hasattr(self, 'chat_group_name'):
-#             await self.channel_layer.group_discard(
-#                 self.chat_group_name,
-#                 self.channel_name
-#             )
-
-#     # async def receive(self, text_data):
-#     #     try:
-#     #         data = json.loads(text_data)
-#     #         message = data["message"]
-#     #         recipient_id = data["recipient_id"]
-#     #     except (KeyError, json.JSONDecodeError):
-#     #         await self.send(text_data=json.dumps({"error": "Invalid message format"}))
-#     #         return
-
-#     #     sender = self.scope["user"]
-
-#     #     chat = await self.get_or_create_chat(sender.id, recipient_id)
-#     #     self.chat = chat
-#     #     self.chat_group_name = f"chat_{chat.id}"
-
-#     #     # Подключение к группе (если не подключен)
-#     #     await self.channel_layer.group_add(
-#     #         self.chat_group_name,
-#     #         self.channel_name
-#     #     )
-
-#     #     saved_message = await self.save_message(sender.id, chat.id, message)
-
-#     #     # Рассылаем сообщение участникам группы
-#     #     await self.channel_layer.group_send(
-#     #         self.chat_group_name,
-#     #         {
-#     #             'type': 'chat_message',
-#     #             'message': saved_message.content,
-#     #             'sender_id': sender.id,
-#     #         }
-#     #     )
-
-#     async def receive(self, text_data):
-#         try:
-#             data = json.loads(text_data)
-#             message = data["message"]
-#         except (KeyError, json.JSONDecodeError):
-#             await self.send(text_data=json.dumps({"error": "Invalid message format"}))
-#             return
-
-#         saved_message = await self.save_message(int(self.user.id), int(self.chat.id), message)
-
-#         await self.channel_layer.group_send(
-#             self.chat_group_name,
-#             {
-#                 'type': 'chat_message',
-#                 'message': saved_message.content,
-#                 'sender_id': int(self.user.id),
-#             }
-#         )
-
-
-#     async def chat_message(self, event):
-#         await self.send(text_data=json.dumps({
-#             'message': event['message'],
-#             'sender_id': event['sender_id'],
-#         }))
-
-    
-
-#     @database_sync_to_async
-#     def get_or_create_chat(self, sender_id, recipient_id):
-#         sender_id = int(sender_id)
-#         recipient_id = int(recipient_id)
-#         # Пытаемся найти чат, где оба пользователя являются участниками
-#         chats = Chat.objects.annotate(num_participants=Count('participants')).filter(
-#             participants__id=sender_id
-#         ).filter(
-#             participants__id=recipient_id
-#         ).filter(
-#             num_participants=2
-#         )
-#         if chats.exists():
-#             return chats.first()
-
-#         # Если не существует — создаём
-#         chat = Chat.objects.create()
-#         chat.participants.add(sender_id, recipient_id)
-#         return chat
-
-#     @database_sync_to_async
-#     def save_message(self, sender_id, chat_id, message):
-#         sender_id = int(sender_id)
-#         chat_id = int(chat_id)
-#         sender = User.objects.get(id=sender_id)
-#         chat = Chat.objects.get(id=chat_id)
-#         return Message.objects.create(chat=chat, sender=sender, content=message)
-
-
-
 import jwt
 import json
 from channels.db import database_sync_to_async
@@ -323,6 +12,7 @@ from django.utils.timezone import localtime
 from accounts.tasks import send_fcm_notification_task
 import pytz
 
+from django.db.models import Q
 
 KZ_TZ = pytz.timezone('Asia/Bishkek')
 
@@ -348,7 +38,22 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
         await self.accept()
 
+        # 1) Пометить ВСЕ чужие непрочитанные сообщения как прочитанные
+        read_ids = await self.mark_messages_as_read()
+
+        # 2) Сообщить другой стороне, какие ID сообщений стали прочитанными
+        if read_ids:
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    'type': 'messages_read',
+                    'reader_id': self.user.id,
+                    'message_ids': read_ids,
+                }
+            )
+
     async def disconnect(self, close_code):
+        # Когда фронтенд делает socket.close(), сюда попадёт событие
         if hasattr(self, 'room_group_name'):
             await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
 
@@ -360,7 +65,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
             return
         
         message_obj = await self.save_message(self.chat_id, self.user, message_text)
-
         created_at_bishkek = localtime(message_obj.created_at, timezone=KZ_TZ)
 
         await self.channel_layer.group_send(
@@ -371,49 +75,42 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 'sender': self.user.email,
                 'sender_id': self.user.id,
                 'sender_name': self.user.name,
-                'created_at': created_at_bishkek.strftime('%d.%m.%Y %H:%M')
+                'created_at': created_at_bishkek.strftime('%d.%m.%Y %H:%M'),
+                'message_id': message_obj.id,
+                'is_read': message_obj.is_read,  # false сразу после создания
             }
         )
 
-        await self.send_push_notifications(message_obj)
-
-    async def send_push_notifications(self, message_obj):
-        other_participants = await self.get_other_participants(self.chat_id, self.user.id)
-
-        for user in other_participants:
-            tokens = await self.get_fcm_tokens(user)
-            for token in tokens:
-                title = f"Новое сообщение от {self.user.name}"
-                body = message_obj.content
-                await self.send_push(token, title, body)
-
-    @database_sync_to_async
-    def get_fcm_tokens(self, user):
-        return list(user.fcm_tokens.values_list('token', flat=True))
-    
-    @database_sync_to_async
-    def get_other_participants(self, chat_id, user_id):
-        try:
-            chat = Chat.objects.get(id=chat_id)
-            return list(chat.participants.exclude(id=user_id))
-        except Chat.DoesNotExist:
-            return []
-    
-    @database_sync_to_async
-    def send_push(self, fcm_token, title, body):
-        send_fcm_notification_task.delay(fcm_token, title, body)
-
 
     async def chat_message(self, event):
-        # Если текущий пользователь отправил сообщение — имя будет "me"
+        """
+        Событие при получении нового сообщения.
+        event содержит: message, sender, sender_id, sender_name, created_at, message_id, is_read
+        """
         sender_name = "me" if self.user.id == event['sender_id'] else event['sender_name']
-
         await self.send(text_data=json.dumps({
+            'type': 'chat_message',
             'message': event['message'],
-            'sender': event['sender'],
+            'sender':  event['sender'],
             'sender_name': sender_name,
             'created_at': event['created_at'],
+            'message_id': event['message_id'],
+            'is_read': event['is_read'],
         }))
+
+    async def messages_read(self, event):
+        """
+        Реакция, когда кто-то из участников пометил сообщения как прочитанные.
+        event содержит: reader_id, message_ids
+        """
+        # Если кто-то из нас — другой участник, просто пробрасываем событие на фронтенд.
+        # Фронтенд узнает, что сообщения с id в 'message_ids' теперь is_read = true.
+        if event['reader_id'] != self.user.id:
+            await self.send(text_data=json.dumps({
+                'type': 'messages_read',
+                'reader_id': event['reader_id'],
+                'message_ids': event['message_ids'],
+            }))
 
     @database_sync_to_async
     def get_user_from_token(self, token):
@@ -436,3 +133,24 @@ class ChatConsumer(AsyncWebsocketConsumer):
     def save_message(self, chat_id, user, content):
         chat = Chat.objects.get(id=chat_id)
         return Message.objects.create(chat=chat, sender=user, content=content)
+
+    @database_sync_to_async
+    def mark_messages_as_read(self):
+        """
+        Помечает все чужие непрочитанные сообщения в этом чате как прочитанные
+        Возвращает список ID тех сообщений, у которых is_read изменился с False → True
+        """
+        # Получаем все релевантные непрочитанные
+        unread_qs = Message.objects.filter(
+            chat_id=self.chat_id,
+            is_read=False
+        ).exclude(sender=self.user)
+
+        # Забираем их ID
+        unread_ids = list(unread_qs.values_list('id', flat=True))
+        if not unread_ids:
+            return []
+
+        # Делаем bulk update
+        unread_qs.update(is_read=True)
+        return unread_ids

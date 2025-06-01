@@ -8,6 +8,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from drf_yasg.utils import swagger_auto_schema
+from django.shortcuts import get_object_or_404
 from drf_yasg import openapi
 
 class ChatListCreateAPIView(generics.ListCreateAPIView):
@@ -32,11 +33,42 @@ class MessageListCreateAPIView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         chat_id = self.kwargs['chat_id']
-        return Message.objects.filter(chat_id=chat_id)
+        return Message.objects.filter(chat_id=chat_id).order_by('created_at')
+    
+
+    def list(self, request, *args, **kwargs):
+        """
+        Возвращает JSON вида:
+        {
+            "unread_messages": [ … ],
+            "read_messages":   [ … ]
+        }
+        """
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True, context={'request': request})
+        all_data = serializer.data
+
+        # Разбиваем на прочитанные и непрочитанные
+        read_messages = [msg for msg in all_data if msg['is_read']]
+        unread_messages = [msg for msg in all_data if not msg['is_read']]
+
+        return Response({
+            "unread_messages": unread_messages,
+            "read_messages":   read_messages,
+        })
 
     def perform_create(self, serializer):
         chat_id = self.kwargs['chat_id']
         serializer.save(chat_id=chat_id, sender=self.request.user)
+
+
+class UnreadMessageCountAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, chat_id):
+        chat = get_object_or_404(Chat, id=chat_id, participants=request.user)
+        unread_count = chat.messages.filter(is_read=False).exclude(sender=request.user).count()
+        return Response({'unread_count': unread_count})
 
 
 class ChatRetrieveAPIView(generics.RetrieveAPIView):

@@ -133,7 +133,7 @@ class MessageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Message
         fields = ['id', 'chat', 'sender', 'sender_name', 'content', 'is_read', 'created_at']
-        read_only_fields = ['sender', 'chat']
+        read_only_fields = ['sender', 'chat', 'is_read']
 
     def get_sender_name(self, obj):
         request = self.context.get('request')
