@@ -19,6 +19,11 @@ class ChatListCreateAPIView(generics.ListCreateAPIView):
     def get_queryset(self):
         return Chat.objects.filter(participants=self.request.user)
 
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context.update({'request': self.request})
+        return context
+
     def perform_create(self, serializer):
         # Текущий пользователь будет добавлен в serializer.create()
         serializer.save()

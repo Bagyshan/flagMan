@@ -36,15 +36,22 @@ class ChatSerializer(serializers.ModelSerializer):
         write_only=True
     )
     participants_info = serializers.SerializerMethodField(read_only=True)
+    unread_count = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Chat
-        fields = ['id', 'participants', 'participants_info', 'created_at']
+        fields = ['id', 'participants', 'participants_info', 'unread_count', 'created_at']
 
     def get_participants_info(self, obj):
         request_user = self.context['request'].user
         other_users = obj.participants.exclude(id=request_user.id)
         return UserSerializer(other_users, many=True, context=self.context).data
+
+    def get_unread_count(self, obj):
+        request = self.context.get('request')
+        if not request:
+            return 0
+        return obj.messages.filter(is_read=False).exclude(sender=request.user).count()
 
     def create(self, validated_data):
         request_user = self.context['request'].user
