@@ -124,6 +124,11 @@ class AdvertisementShortListSerializer(serializers.ModelSerializer):
     is_favorite = serializers.SerializerMethodField()
     images = AdvertisementImageSerializer(many=True, read_only=True)
 
+    # Русские отображения для choices
+    # color = serializers.SerializerMethodField()
+    units_of_mileage = serializers.SerializerMethodField()
+    currency = serializers.SerializerMethodField()
+    city = serializers.SerializerMethodField()
     class Meta:
         model = Advertisement
         fields = [
@@ -158,6 +163,18 @@ class AdvertisementShortListSerializer(serializers.ModelSerializer):
             return Favorite.objects.filter(user=user, advertisement=obj).exists()
         return False
 
+    # def get_color(self, obj):
+    #     return obj.get_color_display()
+
+    def get_units_of_mileage(self, obj):
+        return obj.get_units_of_mileage_display()
+
+    def get_currency(self, obj):
+        return obj.get_currency_display()
+
+    def get_city(self, obj):
+        return obj.get_city_display()
+
 
 class OwnerSerializer(serializers.ModelSerializer):
     class Meta:
@@ -171,6 +188,18 @@ class AdvertisementFullRetrieveSerializer(serializers.ModelSerializer):
     owner = OwnerSerializer(read_only=True)
     is_favorite = serializers.SerializerMethodField()
 
+    # Отображение на русском
+    # color = serializers.SerializerMethodField()
+    currency = serializers.SerializerMethodField()
+    city = serializers.SerializerMethodField()
+    units_of_mileage = serializers.SerializerMethodField()
+    state = serializers.SerializerMethodField()
+    availability_in_kyrgyzstan = serializers.SerializerMethodField()
+    country_of_registration = serializers.SerializerMethodField()
+    possibility_of_exchange = serializers.SerializerMethodField()
+    region = serializers.SerializerMethodField()
+    permission_to_comment = serializers.SerializerMethodField()
+
     class Meta:
         model = Advertisement
         fields = '__all__'
@@ -180,6 +209,36 @@ class AdvertisementFullRetrieveSerializer(serializers.ModelSerializer):
         if user.is_authenticated:
             return Favorite.objects.filter(user=user, advertisement=obj).exists()
         return False
+
+    # def get_color(self, obj):
+    #     return obj.get_color_display()
+
+    def get_currency(self, obj):
+        return obj.get_currency_display()
+
+    def get_city(self, obj):
+        return obj.get_city_display()
+
+    def get_units_of_mileage(self, obj):
+        return obj.get_units_of_mileage_display()
+
+    def get_state(self, obj):
+        return obj.get_state_display()
+
+    def get_availability_in_kyrgyzstan(self, obj):
+        return obj.get_availability_in_kyrgyzstan_display()
+
+    def get_country_of_registration(self, obj):
+        return obj.get_country_of_registration_display()
+
+    def get_possibility_of_exchange(self, obj):
+        return obj.get_possibility_of_exchange_display()
+
+    def get_region(self, obj):
+        return obj.get_region_display()
+
+    def get_permission_to_comment(self, obj):
+        return obj.get_permission_to_comment_display()
     
     def to_representation(self, instance):
         data = super().to_representation(instance)
