@@ -125,7 +125,7 @@ class AdvertisementShortListSerializer(serializers.ModelSerializer):
     images = AdvertisementImageSerializer(many=True, read_only=True)
 
     # Русские отображения для choices
-    # color = serializers.SerializerMethodField()
+    color = serializers.SerializerMethodField()
     units_of_mileage = serializers.SerializerMethodField()
     currency = serializers.SerializerMethodField()
     city = serializers.SerializerMethodField()
@@ -163,8 +163,8 @@ class AdvertisementShortListSerializer(serializers.ModelSerializer):
             return Favorite.objects.filter(user=user, advertisement=obj).exists()
         return False
 
-    # def get_color(self, obj):
-    #     return obj.get_color_display()
+    def get_color(self, obj):
+        return obj.get_color_display()
 
     def get_units_of_mileage(self, obj):
         return obj.get_units_of_mileage_display()
@@ -189,7 +189,7 @@ class AdvertisementFullRetrieveSerializer(serializers.ModelSerializer):
     is_favorite = serializers.SerializerMethodField()
 
     # Отображение на русском
-    # color = serializers.SerializerMethodField()
+    color = serializers.SerializerMethodField()
     currency = serializers.SerializerMethodField()
     city = serializers.SerializerMethodField()
     units_of_mileage = serializers.SerializerMethodField()
@@ -210,8 +210,8 @@ class AdvertisementFullRetrieveSerializer(serializers.ModelSerializer):
             return Favorite.objects.filter(user=user, advertisement=obj).exists()
         return False
 
-    # def get_color(self, obj):
-    #     return obj.get_color_display()
+    def get_color(self, obj):
+        return obj.get_color_display()
 
     def get_currency(self, obj):
         return obj.get_currency_display()
