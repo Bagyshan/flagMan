@@ -52,6 +52,7 @@ services:
 
   celery:
     build: ./
+    restart: always
     command: celery -A config worker -l info
     volumes: 
       - ./:/usr/src/app/
@@ -64,8 +65,11 @@ services:
 
   redis:
     image: redis
+    restart: always
     ports:
       - "6379:6379"
+    command: >
+      sh -c "redis-server --replicaof no one --rename-command REPLICAOF \"\" --rename-command SLAVEOF \"\""
     networks:
       - backend
 
