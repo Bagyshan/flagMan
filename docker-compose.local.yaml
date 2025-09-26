@@ -72,7 +72,7 @@ services:
     build:
       context: .
       dockerfile: nginx/Dockerfile.local
-    container_name: "nginx"
+    container_name: "flagman-nginx"
     restart: always
     ports:
       - "81:80"
