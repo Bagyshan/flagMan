@@ -10,7 +10,7 @@ services:
       - static_volume:/usr/src/app/static
       - media_volume:/usr/src/app/media
     ports:
-      - "8000:8000"
+      - "8001:8000"
     depends_on:
       - db
       - migration
@@ -27,7 +27,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     ports:
-      - "5432:5432"
+      - "5433:5432"
     networks:
       - backend
     
@@ -62,7 +62,7 @@ services:
     image: redis
     restart: always
     ports:
-      - "6379:6379"
+      - "6378:6379"
     networks:
       - backend
 
@@ -75,7 +75,7 @@ services:
     container_name: "nginx"
     restart: always
     ports:
-      - "80:80"
+      - "81:80"
     volumes:
       - ./nginx/nginx-local.conf:/etc/nginx/conf.d/nginx-local.conf
       - static_volume:/usr/src/app/static
